@@ -46,7 +46,7 @@ get '/#asset' => sub ($c) {
   }
 };
 
-get '/' => sub ($c) {
+get '/*dummy' => { dummy => '' } => sub ($c) {
   my $usage = <<'EOF';
 Retrieve the latest ZFSBootMenu assets
 
