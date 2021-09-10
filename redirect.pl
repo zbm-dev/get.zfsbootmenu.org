@@ -91,14 +91,13 @@ __DATA__
 curl https://get.zfsbootmenu.org/:asset
 asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
 </pre>
-
-<h3> wget examples </h3>
+<h4> wget examples </h3>
 <pre>
 $ wget --content-disposition https://get.zfsbootmenu.org/efi
 $ wget --content-disposition https://get.zfsbootmenu.org/tar.gz
 $ wget --content-disposition https://get.zfsbootmenu.org/sha256.sig
 </pre>
-<h3> curl examples </h3>
+<h4> curl examples </h3>
 <pre>
 $ curl -O -L https://get.zfsbootmenu.org/zfsbootmenu.EFI
 $ curl -O -L https://get.zfsbootmenu.org/zfsbootmenu.tar.gz
