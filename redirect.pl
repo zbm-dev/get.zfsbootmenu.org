@@ -83,7 +83,10 @@ __DATA__
 </head>
 <body>
 <div class="container">
-<h2> Retrieve the latest ZFSBootMenu assets </h2>
+<h2> Directly download the latest ZFSBootMenu assets </h2>
+<a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.EFI"> ZFSBootMenu x86_64 EFI </a>
+<a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.tar.gz"> ZFSBootMenu x86_64 Components </a>
+<h2> Retrieve the latest ZFSBootMenu assets from the CLI</h2>
 <pre>
 curl https://get.zfsbootmenu.org/:asset
 asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
