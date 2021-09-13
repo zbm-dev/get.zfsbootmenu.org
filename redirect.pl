@@ -91,17 +91,15 @@ __DATA__
 curl https://get.zfsbootmenu.org/:asset
 asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
 </pre>
-<h4> wget examples </h3>
+<h4> Save download as a custom file name </h3>
+<pre>
+$ wget https://get.zfsbootmenu.org/zfsbootmenu.EFI
+$ curl -LO https://get.zfsbootmenu.org/zfsbootmenu.EFI
+</pre>
+<h4> Save download as named by the project </h3>
 <pre>
 $ wget --content-disposition https://get.zfsbootmenu.org/efi
-$ wget --content-disposition https://get.zfsbootmenu.org/tar.gz
-$ wget --content-disposition https://get.zfsbootmenu.org/sha256.sig
-</pre>
-<h4> curl examples </h3>
-<pre>
-$ curl -O -L https://get.zfsbootmenu.org/zfsbootmenu.EFI
-$ curl -O -L https://get.zfsbootmenu.org/zfsbootmenu.tar.gz
-$ curl -O -L https://get.zfsbootmenu.org/sha256.sig
+$ curl -LJO https://get.zfsbootmenu.org/efi
 </pre>
 Refer to <a href="https://github.com/zbm-dev/zfsbootmenu#signature-verification-and-prebuilt-efi-executables">zbm-dev/zfsbootmenu</a> for signature verification help.
 </body>
