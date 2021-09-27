@@ -106,16 +106,21 @@ Refer to <a href="https://github.com/zbm-dev/zfsbootmenu#signature-verification-
 </html>
 
 @@ help.txt.ep
-Retrieve the latest ZFSBootMenu assets
+Directly download the latest ZFSBootMenu assets 
 
-# wget, save as the official filename
+# Retrieve the latest ZFSBootMenu assets from the CLI
+# asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
+
+curl https://get.zfsbootmenu.org/:asset
+
+# Save download as a custom file name
+
+$ wget https://get.zfsbootmenu.org/zfsbootmenu.EFI
+$ curl -LO https://get.zfsbootmenu.org/zfsbootmenu.EFI
+
+# Save download as named by the project
+
 $ wget --content-disposition https://get.zfsbootmenu.org/efi
-$ wget --content-disposition https://get.zfsbootmenu.org/tar.gz
-$ wget --content-disposition https://get.zfsbootmenu.org/sha256.sig
-
-# curl, save as the filename passed to get.zfsbootmenu.org
-$ curl -O -L https://get.zfsbootmenu.org/zfsbootmenu.EFI
-$ curl -O -L https://get.zfsbootmenu.org/zfsbootmenu.tar.gz
-$ curl -O -L https://get.zfsbootmenu.org/sha256.sig
+$ curl -LJO https://get.zfsbootmenu.org/efi
 
 Refer to https://github.com/zbm-dev/zfsbootmenu#signature-verification-and-prebuilt-efi-executables
