@@ -6,7 +6,6 @@ use warnings;
 use Mojolicious::Lite -signatures;
 use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
-use Data::Dumper;
 
 sub retrieve_assets {
   my @rassets;
@@ -71,6 +70,8 @@ get '/*dummy' => { dummy => '' } => sub ($c) {
   }
   return;
 };
+
+plugin SetUserGroup => { user => "nobody", group => "nogroup" };
 app->start;
 
 __DATA__
