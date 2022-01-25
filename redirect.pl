@@ -7,7 +7,7 @@ use Mojolicious::Lite -signatures;
 use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
 
-helper redirect_asset => sub ($c) {
+get '/#asset/#build' => {build => 'release'} => sub ($c) {
   my @rassets;
   my $ua  = Mojo::UserAgent->new;
   my $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result;
@@ -36,7 +36,7 @@ helper redirect_asset => sub ($c) {
     }
   }
 
-  my $build = $c->param('build') || "release";
+  my $build = $c->param('build');
   my ( $file, $type ) = split( /\./, $asset );
 
   # Match against the full filename
@@ -66,14 +66,6 @@ helper redirect_asset => sub ($c) {
   }
 
   return $c->render( text => "No matches found for $asset", status => '200' );
-};
-
-get '/#asset/#build' => sub ($c) {
-  $c->redirect_asset;
-};
-
-get '/#asset' => sub ($c) {
-  $c->redirect_asset;
 };
 
 get '/*dummy' => { dummy => '' } => sub ($c) {
