@@ -8,6 +8,8 @@ use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
 use Mojo::File;
 
+use Data::Dumper;
+
 any ['GET', 'POST'] => '/#asset/#build' => {build => 'release'} => sub ($c) {
   my @rassets;
   my $ua  = Mojo::UserAgent->new;
@@ -25,6 +27,8 @@ any ['GET', 'POST'] => '/#asset/#build' => {build => 'release'} => sub ($c) {
   if ( !@rassets ) {
     return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '200' );
   }
+
+  print Dumper($c);
 
   my $asset = $c->param('asset');
 
@@ -108,7 +112,7 @@ get '/*dummy' => { dummy => '' } => sub ($c) {
   return;
 };
 
-plugin SetUserGroup => { user => "nobody", group => "nogroup" };
+#plugin SetUserGroup => { user => "nobody", group => "nogroup" };
 app->start;
 
 __DATA__
@@ -124,6 +128,15 @@ __DATA__
 <h2> Directly download the latest ZFSBootMenu assets </h2>
 <a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.EFI"> ZFSBootMenu x86_64 EFI </a>
 <a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.tar.gz"> ZFSBootMenu x86_64 Components </a>
+
+<h2> Generate custom ZFSBootMenu EFI asset </h2>
+<form class="form-inline" method="POST" action="/efi/release" id="kcl">
+<div class="form-group kcl">
+<label for="kcl">Kernel Command Line</label>
+<input type="text" class="form-control" name="kcl" id="kcl" placeholder="zfsbootmenu loglevel=4 nomodeset">
+</div>
+<button type="submit" class="btn btn-primary embed-kcl">Generate!</button>
+</form>
 <h2> Retrieve the latest ZFSBootMenu assets from the CLI</h2>
 <pre>
 curl https://get.zfsbootmenu.org/:asset/:build
