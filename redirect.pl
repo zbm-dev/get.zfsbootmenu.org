@@ -6,13 +6,15 @@ use warnings;
 use Mojolicious::Lite -signatures;
 use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
+use Mojo::File;
 
-get '/#asset/#build' => {build => 'release'} => sub ($c) {
+any ['GET', 'POST'] => '/#asset/#build' => {build => 'release'} => sub ($c) {
   my @rassets;
   my $ua  = Mojo::UserAgent->new;
   my $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result;
+
   unless ( $res->is_success ) {
-    return @rassets;
+    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '200' );
   }
   my $releases = decode_json( $res->body );
 
@@ -39,11 +41,14 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
   my $build = $c->param('build');
   my ( $file, $type ) = split( /\./, $asset );
 
+  my $found_asset;
+
   # Match against the full filename
   foreach my $rasset (@rassets) {
     my $rfile = ( split( '/', $rasset ) )[-1];
     if ( $rfile =~ m/\Q$asset/i and $rfile =~ m/\Q$build/i ) {
-      return $c->redirect_to($rasset);
+      $found_asset = $rasset;
+      last;
     }
   }
 
@@ -51,7 +56,8 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
     foreach my $rasset (@rassets) {
       my $rfile = ( split( '/', $rasset ) )[-1];
       if ( $rfile =~ m/\Q$type/i and $rfile =~ m/\Q$build/i ) {
-        return $c->redirect_to($rasset);
+        $found_asset = $rasset;
+        last;
       }
     }
   }
@@ -60,12 +66,36 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
     foreach my $rasset (@rassets) {
       my $rfile = ( split( '/', $rasset ) )[-1];
       if ( $rfile =~ m/\Q$file/i and $rfile =~ m/\Q$build/i ) {
-        return $c->redirect_to($rasset);
+        $found_asset = $rasset;
+        last;
       }
     }
   }
 
-  return $c->render( text => "No matches found for $asset", status => '200' );
+  unless (defined $found_asset) {
+    return $c->render( text => "No matches found for $asset", status => '200' );
+  }
+
+  if ( ($asset =~ m/efi/i) and ( defined $c->param('kcl')) ) {
+    $res = $ua->max_redirects(5)->get($found_asset)->result;
+    my $download = $res->content->asset->path;
+
+    my $tmp = Mojo::File->new(File::Temp->new);
+    my $tmp_path = $tmp->to_string;
+
+    my @output = qx(objcopy --remove-section .cmdline $download $tmp_path);
+
+    my $tmp_kcl = Mojo::File->new(File::Temp->new);
+    $tmp_kcl->spurt($c->param('kcl'));
+    my $tmp_kcl_path = $tmp_kcl->to_string;
+
+    @output = qx(objcopy --add-section .cmdline=$tmp_kcl_path --change-section-vma .cmdline=0x3000 $tmp_path);
+    my $filename = (split('/', $found_asset))[-1];
+    $c->res->headers->content_disposition("attachment; filename=$filename;");
+    $c->reply->file($tmp_path);
+  } else {
+    return $c->redirect_to($found_asset);
+  }
 };
 
 get '/*dummy' => { dummy => '' } => sub ($c) {
@@ -120,7 +150,7 @@ Refer to <a href="https://github.com/zbm-dev/zfsbootmenu#signature-verification-
 </html>
 
 @@ help.txt.ep
-Directly download the latest ZFSBootMenu assets 
+Directly download the latest ZFSBootMenu assets
 
 # Retrieve the latest ZFSBootMenu assets from the CLI
 # asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
