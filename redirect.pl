@@ -8,14 +8,21 @@ use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
 use Mojo::File;
 
+sub execute {
+  ( @_ = qx{@_ 2>&1}, $? >> 8 );
+}
+
 any [ 'GET', 'POST' ] => '/#asset/#build' => { build => 'release' } => sub ($c) {
   my @rassets;
-  my $ua  = Mojo::UserAgent->new;
-  my $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result;
+  my $ua = Mojo::UserAgent->new;
+  my $res;
 
-  unless ( $res->is_success ) {
-    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '200' );
+  eval { $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result; };
+
+  if ( ($@) or ( $res->is_error ) ) {
+    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '418' );
   }
+
   my $releases = decode_json( $res->body );
 
   foreach my $rasset ( @{ $releases->{'assets'} } ) {
@@ -23,7 +30,7 @@ any [ 'GET', 'POST' ] => '/#asset/#build' => { build => 'release' } => sub ($c) 
   }
 
   if ( !@rassets ) {
-    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '200' );
+    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '418' );
   }
 
   my $asset = $c->param('asset');
@@ -70,6 +77,7 @@ any [ 'GET', 'POST' ] => '/#asset/#build' => { build => 'release' } => sub ($c) 
     return $c->render( text => "No matches found for $asset", status => '200' );
   }
 
+  # A custom KCL was provided, so download the requested EFI and attempt to embed it
   if ( ( $asset =~ m/efi/i ) and ( defined $c->param('kcl') ) ) {
     $res = $ua->max_redirects(5)->get($found_asset)->result;
     my $download = $res->content->asset->path;
@@ -77,17 +85,33 @@ any [ 'GET', 'POST' ] => '/#asset/#build' => { build => 'release' } => sub ($c) 
     my $tmp      = Mojo::File->new( File::Temp->new );
     my $tmp_path = $tmp->to_string;
 
-    my @output = qx(objcopy --remove-section .cmdline $download $tmp_path);
+    my ( @output, $status );
+
+    # Remove the original .cmdline section, store the output at a new temporary path
+    @output = execute(qq(objcopy --remove-section .cmdline $download $tmp_path));
+    $status = pop(@output);
+    if ( $status ne 0 ) {
+      return $c->render( text => "Unable to set commandline for asset", status => '418' );
+    }
 
     my $tmp_kcl = Mojo::File->new( File::Temp->new );
     $tmp_kcl->spurt( $c->param('kcl') );
     my $tmp_kcl_path = $tmp_kcl->to_string;
 
-    @output = qx(objcopy --add-section .cmdline=$tmp_kcl_path --change-section-vma .cmdline=0x3000 $tmp_path);
+    # Embed the user-provided KCL in the EFI asset
+    @output = execute(qq(objcopy --add-section .cmdline=$tmp_kcl_path --change-section-vma .cmdline=0x3000 $tmp_path));
+    $status = pop(@output);
+    if ( $status ne 0 ) {
+      return $c->render( text => "Unable to set commandline for asset", status => '418' );
+    }
+
+    # Set the filename when sending the new EFI asset
     my $filename = ( split( '/', $found_asset ) )[-1];
     $c->res->headers->content_disposition("attachment; filename=$filename;");
     $c->reply->file($tmp_path);
   } else {
+
+    # No KCL embeding is taking place, issue a redirect
     return $c->redirect_to($found_asset);
   }
 };
