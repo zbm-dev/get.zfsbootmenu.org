@@ -6,14 +6,23 @@ use warnings;
 use Mojolicious::Lite -signatures;
 use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
+use Mojo::File;
 
-get '/#asset/#build' => {build => 'release'} => sub ($c) {
+sub execute {
+  ( @_ = qx{@_ 2>&1}, $? >> 8 );
+}
+
+any [ 'GET', 'POST' ] => '/#asset/#build' => { build => 'release' } => sub ($c) {
   my @rassets;
-  my $ua  = Mojo::UserAgent->new;
-  my $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result;
-  unless ( $res->is_success ) {
-    return @rassets;
+  my $ua = Mojo::UserAgent->new;
+  my $res;
+
+  eval { $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result; };
+
+  if ( ($@) or ( $res->is_error ) ) {
+    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '418' );
   }
+
   my $releases = decode_json( $res->body );
 
   foreach my $rasset ( @{ $releases->{'assets'} } ) {
@@ -21,7 +30,7 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
   }
 
   if ( !@rassets ) {
-    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '200' );
+    return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '418' );
   }
 
   my $asset = $c->param('asset');
@@ -39,33 +48,72 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
   my $build = $c->param('build');
   my ( $file, $type ) = split( /\./, $asset );
 
+  my $found_asset;
+
   # Match against the full filename
   foreach my $rasset (@rassets) {
     my $rfile = ( split( '/', $rasset ) )[-1];
     if ( $rfile =~ m/\Q$asset/i and $rfile =~ m/\Q$build/i ) {
-      return $c->redirect_to($rasset);
+      $found_asset = $rasset;
+      last;
     }
-  }
 
-  if ( defined $type ) {
-    foreach my $rasset (@rassets) {
-      my $rfile = ( split( '/', $rasset ) )[-1];
+    if ( defined $type ) {
       if ( $rfile =~ m/\Q$type/i and $rfile =~ m/\Q$build/i ) {
-        return $c->redirect_to($rasset);
+        $found_asset = $rasset;
+        last;
       }
     }
-  }
 
-  if ( defined $file ) {
-    foreach my $rasset (@rassets) {
-      my $rfile = ( split( '/', $rasset ) )[-1];
+    if ( defined $file ) {
       if ( $rfile =~ m/\Q$file/i and $rfile =~ m/\Q$build/i ) {
-        return $c->redirect_to($rasset);
+        $found_asset = $rasset;
+        last;
       }
     }
   }
 
-  return $c->render( text => "No matches found for $asset", status => '200' );
+  unless ( defined $found_asset ) {
+    return $c->render( text => "No matches found for $asset", status => '200' );
+  }
+
+  # A custom KCL was provided, so download the requested EFI and attempt to embed it
+  if ( ( $asset =~ m/efi/i ) and ( defined $c->param('kcl') ) ) {
+    $res = $ua->max_redirects(5)->get($found_asset)->result;
+    my $download = $res->content->asset->path;
+
+    my $tmp      = Mojo::File->new( File::Temp->new );
+    my $tmp_path = $tmp->to_string;
+
+    my ( @output, $status );
+
+    # Remove the original .cmdline section, store the output at a new temporary path
+    @output = execute(qq(objcopy --remove-section .cmdline $download $tmp_path));
+    $status = pop(@output);
+    if ( $status ne 0 ) {
+      return $c->render( text => "Unable to set commandline for asset", status => '418' );
+    }
+
+    my $tmp_kcl = Mojo::File->new( File::Temp->new );
+    $tmp_kcl->spurt( $c->param('kcl') );
+    my $tmp_kcl_path = $tmp_kcl->to_string;
+
+    # Embed the user-provided KCL in the EFI asset
+    @output = execute(qq(objcopy --add-section .cmdline=$tmp_kcl_path --change-section-vma .cmdline=0x3000 $tmp_path));
+    $status = pop(@output);
+    if ( $status ne 0 ) {
+      return $c->render( text => "Unable to set commandline for asset", status => '418' );
+    }
+
+    # Set the filename when sending the new EFI asset
+    my $filename = ( split( '/', $found_asset ) )[-1];
+    $c->res->headers->content_disposition("attachment; filename=$filename;");
+    $c->reply->file($tmp_path);
+  } else {
+
+    # No KCL embeding is taking place, issue a redirect
+    return $c->redirect_to($found_asset);
+  }
 };
 
 get '/*dummy' => { dummy => '' } => sub ($c) {
@@ -78,7 +126,7 @@ get '/*dummy' => { dummy => '' } => sub ($c) {
   return;
 };
 
-plugin SetUserGroup => { user => "nobody", group => "nogroup" };
+#plugin SetUserGroup => { user => "nobody", group => "nogroup" };
 app->start;
 
 __DATA__
@@ -94,6 +142,15 @@ __DATA__
 <h2> Directly download the latest ZFSBootMenu assets </h2>
 <a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.EFI"> ZFSBootMenu x86_64 EFI </a>
 <a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.tar.gz"> ZFSBootMenu x86_64 Components </a>
+
+<h2> Generate custom ZFSBootMenu EFI asset </h2>
+<form class="form-inline" method="POST" action="/efi/release" id="kcl">
+<div class="form-group kcl">
+<label for="kcl">Kernel Command Line</label>
+<input type="text" class="form-control" name="kcl" id="kcl" placeholder="zfsbootmenu loglevel=4 nomodeset">
+</div>
+<button type="submit" class="btn btn-primary embed-kcl">Generate!</button>
+</form>
 <h2> Retrieve the latest ZFSBootMenu assets from the CLI</h2>
 <pre>
 curl https://get.zfsbootmenu.org/:asset/:build
@@ -120,7 +177,7 @@ Refer to <a href="https://github.com/zbm-dev/zfsbootmenu#signature-verification-
 </html>
 
 @@ help.txt.ep
-Directly download the latest ZFSBootMenu assets 
+Directly download the latest ZFSBootMenu assets
 
 # Retrieve the latest ZFSBootMenu assets from the CLI
 # asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
