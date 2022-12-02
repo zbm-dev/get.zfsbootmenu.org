@@ -27,7 +27,7 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
   my $asset = $c->param('asset');
 
   # There are no build styles for sha256.txt|sig
-  if ( $asset =~ m/(sha256|txt|sig)/ ) {
+  if ( $asset =~ m/(sha256|txt|sig|zbm-efi-kcl)/ ) {
     foreach my $rasset (@rassets) {
       my $rfile = ( split( '/', $rasset ) )[-1];
       if ( $rfile =~ m/\Q$asset/i ) {
