@@ -7,7 +7,7 @@ use Mojolicious::Lite -signatures;
 use Mojo::UserAgent;
 use Mojo::JSON qw(decode_json);
 
-get '/#asset/#build' => {build => 'release'} => sub ($c) {
+get '/#asset/#build' => { build => 'release' } => sub ($c) {
   my @rassets;
   my $ua  = Mojo::UserAgent->new;
   my $res = $ua->get('https://api.github.com/repos/zbm-dev/zfsbootmenu/releases/latest')->result;
@@ -20,17 +20,29 @@ get '/#asset/#build' => {build => 'release'} => sub ($c) {
     push( @rassets, $rasset->{browser_download_url} );
   }
 
+  my $tag_name = $releases->{'tag_name'};
+  push( @rassets, "https://github.com/zbm-dev/zfsbootmenu/archive/refs/tags/$tag_name.tar.gz" );
+
   if ( !@rassets ) {
     return $c->render( text => "Unable to retrieve asset list from api.github.com", status => '200' );
   }
 
   my $asset = $c->param('asset');
 
-  # There are no build styles for sha256.txt|sig
+  # There are no build styles for signatures or KCL writer
   if ( $asset =~ m/(sha256|txt|sig|zbm-efi-kcl)/ ) {
     foreach my $rasset (@rassets) {
       my $rfile = ( split( '/', $rasset ) )[-1];
       if ( $rfile =~ m/\Q$asset/i ) {
+        return $c->redirect_to($rasset);
+      }
+    }
+  }
+
+  # source is a special case
+  if ( $asset =~ m/source/ ) {
+    foreach my $rasset (@rassets) {
+      if ( $rasset =~ m@\Qarchive/refs/tags@i ) {
         return $c->redirect_to($rasset);
       }
     }
@@ -94,11 +106,18 @@ __DATA__
 <h2> Directly download the latest ZFSBootMenu assets </h2>
 <a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.EFI"> ZFSBootMenu x86_64 EFI </a>
 <a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.tar.gz"> ZFSBootMenu x86_64 Components </a>
+<a class="btn btn-primary" href="https://get.zfsbootmenu.org/source.tar.gz"> ZFSBootMenu Source </a>
 <h2> Retrieve the latest ZFSBootMenu assets from the CLI</h2>
+<h3> Release and recovery images</h3>
 <pre>
 curl https://get.zfsbootmenu.org/:asset/:build
-asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
+asset => [ 'efi', 'tar.gz' ]
 build => [ 'release', 'recovery' ]
+</pre>
+<h3> Other assets</h3>
+<pre>
+curl https://get.zfsbootmenu.org/:asset
+asset => [ 'sha256.sig', 'sha256.txt', 'zbm-efi-kcl', 'source' ]
 </pre>
 <h3> Save download as a custom file name </h3>
 <pre>
@@ -122,11 +141,16 @@ Refer to <a href="https://github.com/zbm-dev/zfsbootmenu#signature-verification-
 @@ help.txt.ep
 Directly download the latest ZFSBootMenu assets 
 
-# Retrieve the latest ZFSBootMenu assets from the CLI
-# asset => [ 'efi', 'tar.gz', 'sha256.sig', 'sha256.txt' ]
+# Retrieve the latest recovery or release assets from the CLI
+# asset => [ 'efi', 'tar.gz' ]
 # build => [ 'release', 'recovery' ]
 
 $ curl https://get.zfsbootmenu.org/:asset/:build
+
+# Retrieve additional assets from the CLI
+# asset => [ 'sha256.sig', 'sha256.txt', 'zbm-efi-kcl', 'source' ]
+
+$ curl https://get.zfsbootmenu.org/:asset
 
 # Save download as a custom file name
 
