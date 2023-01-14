@@ -30,7 +30,7 @@ get '/#asset/#build' => { build => 'release' } => sub ($c) {
   my $asset = $c->param('asset');
 
   # There are no build styles for signatures or KCL writer
-  if ( $asset =~ m/(sha256|txt|sig|zbm-efi-kcl)/ ) {
+  if ( $asset =~ m/(sha256|txt|sig|zbm-kcl)/ ) {
     foreach my $rasset (@rassets) {
       my $rfile = ( split( '/', $rasset ) )[-1];
       if ( $rfile =~ m/\Q$asset/i ) {
@@ -117,7 +117,7 @@ build => [ 'release', 'recovery' ]
 <h3> Other assets</h3>
 <pre>
 curl https://get.zfsbootmenu.org/:asset
-asset => [ 'sha256.sig', 'sha256.txt', 'zbm-efi-kcl', 'source' ]
+asset => [ 'sha256.sig', 'sha256.txt', 'zbm-kcl', 'source' ]
 </pre>
 <h3> Save download as a custom file name </h3>
 <pre>
@@ -148,7 +148,7 @@ Directly download the latest ZFSBootMenu assets
 $ curl https://get.zfsbootmenu.org/:asset/:build
 
 # Retrieve additional assets from the CLI
-# asset => [ 'sha256.sig', 'sha256.txt', 'zbm-efi-kcl', 'source' ]
+# asset => [ 'sha256.sig', 'sha256.txt', 'zbm-kcl', 'source' ]
 
 $ curl https://get.zfsbootmenu.org/:asset
 
