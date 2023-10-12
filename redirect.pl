@@ -134,7 +134,7 @@ $ curl -LJO https://get.zfsbootmenu.org/efi
 $ wget --content-disposition https://get.zfsbootmenu.org/efi/recovery
 $ curl -LJO https://get.zfsbootmenu.org/efi/recovery
 </pre>
-Refer to <a href="https://github.com/zbm-dev/zfsbootmenu#signature-verification-and-prebuilt-efi-executables">zbm-dev/zfsbootmenu</a> for signature verification help.
+Refer to <a href="https://docs.zfsbootmenu.org/#signature-verification-and-prebuilt-efi-executables">docs.zfsbootmenu.org</a> for signature verification help.
 </body>
 </html>
 
@@ -166,4 +166,4 @@ $ curl -LJO https://get.zfsbootmenu.org/efi
 $ wget --content-disposition https://get.zfsbootmenu.org/efi/recovery
 $ curl -LJO https://get.zfsbootmenu.org/efi/recovery
 
-Refer to https://github.com/zbm-dev/zfsbootmenu#signature-verification-and-prebuilt-efi-executables
+Refer to https://docs.zfsbootmenu.org/#signature-verification-and-prebuilt-efi-executables
