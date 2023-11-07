@@ -96,6 +96,7 @@ app->start;
 __DATA__
 
 @@ help.html.ep
+% my $url = url_for->to_abs->scheme('https');
 <!DOCTYPE html>
 <html>
 <head>
@@ -104,35 +105,35 @@ __DATA__
 <body>
 <div class="container">
 <h2> Directly download the latest ZFSBootMenu assets </h2>
-<a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.EFI"> ZFSBootMenu x86_64 EFI </a>
-<a class="btn btn-primary" href="https://get.zfsbootmenu.org/latest.tar.gz"> ZFSBootMenu x86_64 Components </a>
-<a class="btn btn-primary" href="https://get.zfsbootmenu.org/source.tar.gz"> ZFSBootMenu Source </a>
+<a class="btn btn-primary" href="<%= $url %>latest.EFI"> ZFSBootMenu x86_64 EFI </a>
+<a class="btn btn-primary" href="<%= $url %>latest.tar.gz"> ZFSBootMenu x86_64 Components </a>
+<a class="btn btn-primary" href="<%= $url %>source.tar.gz"> ZFSBootMenu Source </a>
 <h2> Retrieve the latest ZFSBootMenu assets from the CLI</h2>
 <h3> Release and recovery images</h3>
 <pre>
-curl https://get.zfsbootmenu.org/:asset/:build
+curl <%= $url %>:asset/:build
 asset => [ 'efi', 'tar.gz' ]
 build => [ 'release', 'recovery' ]
 </pre>
 <h3> Other assets</h3>
 <pre>
-curl https://get.zfsbootmenu.org/:asset
+curl <%= $url %>:asset
 asset => [ 'sha256.sig', 'sha256.txt', 'zbm-kcl', 'source' ]
 </pre>
 <h3> Save download as a custom file name </h3>
 <pre>
-$ wget https://get.zfsbootmenu.org/zfsbootmenu.EFI
-$ curl -LO https://get.zfsbootmenu.org/zfsbootmenu.EFI
+$ wget <%= $url %>zfsbootmenu.EFI
+$ curl -LO <%= $url %>zfsbootmenu.EFI
 </pre>
 <h3> Save download as named by the project </h3>
 <pre>
-$ wget --content-disposition https://get.zfsbootmenu.org/efi
-$ curl -LJO https://get.zfsbootmenu.org/efi
+$ wget --content-disposition <%= $url %>efi
+$ curl -LJO <%= $url %>efi
 </pre>
 <h3> Download the recovery build instead of the release build </h3>
 <pre>
-$ wget --content-disposition https://get.zfsbootmenu.org/efi/recovery
-$ curl -LJO https://get.zfsbootmenu.org/efi/recovery
+$ wget --content-disposition <%= $url %>efi/recovery
+$ curl -LJO <%= $url %>efi/recovery
 </pre>
 Refer to <a href="https://docs.zfsbootmenu.org/#signature-verification-and-prebuilt-efi-executables">docs.zfsbootmenu.org</a> for signature verification help.
 </body>
@@ -145,25 +146,25 @@ Directly download the latest ZFSBootMenu assets
 # asset => [ 'efi', 'tar.gz' ]
 # build => [ 'release', 'recovery' ]
 
-$ curl https://get.zfsbootmenu.org/:asset/:build
+$ curl <%= $url %>:asset/:build
 
 # Retrieve additional assets from the CLI
 # asset => [ 'sha256.sig', 'sha256.txt', 'zbm-kcl', 'source' ]
 
-$ curl https://get.zfsbootmenu.org/:asset
+$ curl <%= $url %>:asset
 
 # Save download as a custom file name
 
-$ wget https://get.zfsbootmenu.org/zfsbootmenu.EFI
-$ curl -LO https://get.zfsbootmenu.org/zfsbootmenu.EFI
+$ wget <%= $url %>zfsbootmenu.EFI
+$ curl -LO <%= $url %>zfsbootmenu.EFI
 
 # Save download as named by the project
 
-$ wget --content-disposition https://get.zfsbootmenu.org/efi
-$ curl -LJO https://get.zfsbootmenu.org/efi
+$ wget --content-disposition <%= $url %>efi
+$ curl -LJO <%= $url %>efi
 
 # Download the recovery build instead of the release build
-$ wget --content-disposition https://get.zfsbootmenu.org/efi/recovery
-$ curl -LJO https://get.zfsbootmenu.org/efi/recovery
+$ wget --content-disposition <%= $url %>efi/recovery
+$ curl -LJO <%= $url %>efi/recovery
 
 Refer to https://docs.zfsbootmenu.org/#signature-verification-and-prebuilt-efi-executables
