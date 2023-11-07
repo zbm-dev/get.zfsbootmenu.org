@@ -140,6 +140,7 @@ Refer to <a href="https://docs.zfsbootmenu.org/#signature-verification-and-prebu
 </html>
 
 @@ help.txt.ep
+% my $url = url_for->to_abs->scheme('https');
 Directly download the latest ZFSBootMenu assets 
 
 # Retrieve the latest recovery or release assets from the CLI
