@@ -28,6 +28,9 @@ get '/#asset/#build' => { build => 'release' } => sub ($c) {
   }
 
   my $asset = $c->param('asset');
+  if ( $asset eq "components" ) {
+    $asset = "tar.gz";
+  }
 
   # There are no build styles for signatures or KCL writer
   if ( $asset =~ m/(sha256|txt|sig|zbm-kcl)/ ) {
@@ -112,7 +115,7 @@ __DATA__
 <h3> Release and recovery images</h3>
 <pre>
 curl <%= $url %>:asset/:build
-asset => [ 'efi', 'tar.gz' ]
+asset => [ 'efi', 'components' ]
 build => [ 'release', 'recovery' ]
 </pre>
 <h3> Other assets</h3>
@@ -144,7 +147,7 @@ Refer to <a href="https://docs.zfsbootmenu.org/#signature-verification-and-prebu
 Directly download the latest ZFSBootMenu assets 
 
 # Retrieve the latest recovery or release assets from the CLI
-# asset => [ 'efi', 'tar.gz' ]
+# asset => [ 'efi', 'components' ]
 # build => [ 'release', 'recovery' ]
 
 $ curl <%= $url %>:asset/:build
