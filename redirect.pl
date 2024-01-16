@@ -33,8 +33,13 @@ get '/#asset/#build' => { build => 'release' } => sub ($c) {
   }
 
   # The KCL writer and zbm-builder.sh scripts are not versioned
-  if ( $asset =~ m/(zbm-kcl|zbm-builder.sh)/ ) {
-    my $rasset = "https://raw.githubusercontent.com/zbm-dev/zfsbootmenu/master/$asset";
+  my $raw_base_url = "https://raw.githubusercontent.com/zbm-dev/zfsbootmenu/master";
+  if ( $asset =~ m/zbm-builder.sh/ ) {
+    my $rasset = "$raw_base_url/$asset";
+    return $c->redirect_to($rasset);
+  }
+  if ( $asset =~ m/zbm-kcl/ ) {
+    my $rasset = "$raw_base_url/bin/$asset";
     return $c->redirect_to($rasset);
   }
 
