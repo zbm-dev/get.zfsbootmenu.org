@@ -32,8 +32,14 @@ get '/#asset/#build' => { build => 'release' } => sub ($c) {
     $asset = "tar.gz";
   }
 
-  # There are no build styles for signatures or KCL writer
-  if ( $asset =~ m/(sha256|txt|sig|zbm-kcl)/ ) {
+  # The KCL writer and zbm-builder.sh scripts are not versioned
+  if ( $asset =~ m/(zbm-kcl|zbm-builder.sh)/ ) {
+    my $rasset = "https://raw.githubusercontent.com/zbm-dev/zfsbootmenu/master/$asset";
+    return $c->redirect_to($rasset);
+  }
+
+  # There are no build styles for signatures
+  if ( $asset =~ m/(sha256|txt|sig)/ ) {
     foreach my $rasset (@rassets) {
       my $rfile = ( split( '/', $rasset ) )[-1];
       if ( $rfile =~ m/\Q$asset/i ) {
@@ -121,7 +127,7 @@ build => [ 'release', 'recovery' ]
 <h3> Other assets</h3>
 <pre>
 curl <%= $url %>:asset
-asset => [ 'sha256.sig', 'sha256.txt', 'zbm-kcl', 'source' ]
+asset => [ 'sha256.sig', 'sha256.txt', 'source', 'zbm-builder.sh', 'zbm-kcl' ]
 </pre>
 <h3> Save download as a custom file name </h3>
 <pre>
@@ -153,7 +159,7 @@ Directly download the latest ZFSBootMenu assets
 $ curl <%= $url %>:asset/:build
 
 # Retrieve additional assets from the CLI
-# asset => [ 'sha256.sig', 'sha256.txt', 'zbm-kcl', 'source' ]
+# asset => [ 'sha256.sig', 'sha256.txt', 'source', 'zbm-builder.sh', 'zbm-kcl' ]
 
 $ curl <%= $url %>:asset
 
