@@ -1,0 +1,10 @@
+services:
+  pastebin:
+    tty: true
+    stdin_open: true
+    image: redirect:latest
+    container_name: redirect
+    restart: always
+    network_mode: host
+    environment:
+      PORT: 8081

@@ -105,6 +105,8 @@ get '/*dummy' => { dummy => '' } => sub ($c) {
 };
 
 plugin SetUserGroup => { user => "nobody", group => "nogroup" };
+my $listen = defined( $ENV{'PORT'} ) ? $ENV{'PORT'} : '8081';
+app->config( hypnotoad => { listen => ["http://127.0.0.1:$listen"] } );
 app->start;
 
 __DATA__
