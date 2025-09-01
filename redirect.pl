@@ -96,7 +96,7 @@ get '/#asset/#build' => { build => 'release' } => sub ($c) {
 
 get '/*dummy' => { dummy => '' } => sub ($c) {
   my $remote_ua = $c->req->headers->user_agent;
-  if ( $remote_ua =~ m/(wget|curl|fetch|powershell|ansible-httpget)/i ) {
+  if ( ( not length $remote_ua ) or ( $remote_ua =~ m/(wget|curl|fetch|powershell|ansible-httpget)/i ) ) {
     $c->render( 'help', format => 'txt' );
   } else {
     $c->render( 'help', format => 'html' );
